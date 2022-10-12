@@ -37,67 +37,38 @@ __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221008
 
-import json
-from builtins import isinstance
-from typing import Iterable
-
-from .connector import ConnectionManager
-from fastapi_keycloak_manager.core.exceptions import raise_error_from_response, KeycloakGetError
-from KeycloakTokenManager import KeycloakTokenManager
-from fastapi_keycloak_manager.core import urls_patterns as urls_patterns
-
 import functools
 import json
-from json import JSONDecodeError
-from typing import Any, Callable, List, Type, Union
+from builtins import isinstance
+from typing import Any, List, Union
+from typing import Iterable
 from urllib.parse import urlencode
 
 import requests
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import ExpiredSignatureError, JWTError, jwt
-from jose.exceptions import JWTClaimsError
-from pydantic import BaseModel
+from fastapi import status
 from requests import Response
 
-from fastapi_keycloak.exceptions import (
-    ConfigureTOTPException,
-    KeycloakError,
-    MandatoryActionException,
-    UpdatePasswordException,
-    UpdateProfileException,
-    UpdateUserLocaleException,
+from fastapi_keycloak_manager.core import urls_patterns as urls_patterns
+from .connector import ConnectionManager, result_or_error
+
+from KeycloakTokenManager import KeycloakTokenManager
+from fastapi_keycloak_manager.core.exceptions import (
+    raise_error_from_response,
     UserNotFound,
-    VerifyEmailException,
+    KeycloakGetError,
 )
+
 from fastapi_keycloak.model import (
     HTTPMethod,
     KeycloakGroup,
     KeycloakIdentityProvider,
     KeycloakRole,
-    KeycloakToken,
     KeycloakUser,
-    OIDCUser,
 )
-
-from .connector import result_or_error
 
 
 class KeycloakAdmin:
     PAGE_SIZE = 100
-
-    # _server_url = None
-    # _username = None
-    # _password = None
-    # _realm_name = None
-    # _client_id = None
-    # _verify = None
-    # _client_secret_key = None
-    # _auto_refresh_token = None
-    # _connectionManager = None
-    # _site_token = None
-    # _custom_headers = None
-    _user_realm_name = None
 
     def __init__(
             self,
@@ -109,7 +80,6 @@ class KeycloakAdmin:
             client_secret_key=None,
             verify=True,
             custom_headers=None,
-            user_realm_name=None,
             auto_refresh_token=None,
             callback_url: str = None,
             timeout: int = 10,
@@ -126,7 +96,6 @@ class KeycloakAdmin:
         :param verify: True if want check _connectionManager SSL
         :param client_secret_key: client secret key
         :param custom_headers: dict of custom header to pass to each HTML request
-        :param user_realm_name: The _realm name of the user, if different from _realm_name
         :param auto_refresh_token: list of methods that allows automatic _site_token refresh. ex: ['get', 'put', 'post', 'delete']
         """
         self._server_url = server_url
@@ -138,7 +107,6 @@ class KeycloakAdmin:
         self._callback_url = callback_url
         self._verify = verify
         self._auto_refresh_token = auto_refresh_token or []
-        self._user_realm_name = user_realm_name
         self._custom_headers = custom_headers
         self._timeout = timeout
         self._tokenManager = token_manager
@@ -233,14 +201,6 @@ class KeycloakAdmin:
                 allowed=allowed_methods))
 
         self._auto_refresh_token = value
-
-    @property
-    def user_realm_name(self):
-        return self._user_realm_name
-
-    @user_realm_name.setter
-    def user_realm_name(self, value):
-        self._user_realm_name = value
 
     @property
     def custom_headers(self):
