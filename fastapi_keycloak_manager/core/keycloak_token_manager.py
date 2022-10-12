@@ -51,15 +51,10 @@ from fastapi_keycloak_manager.core.models.model import (
     HTTPMethod,
     KeycloakToken,
 )
-from .connector import ConnectionManager
-from .connector import result_or_error
-from .exceptions import (
-    KeycloakError,
-    KeycloakGetError,
-    KeycloakRPTNotFound,
-    KeycloakDeprecationError,
-    raise_error_from_response, KeycloakInvalidTokenError,
-)
+from fastapi_keycloak_manager.core.connector import ConnectionManager
+from fastapi_keycloak_manager.core.connector import result_or_error
+from fastapi_keycloak_manager.core.exceptions import KeycloakError, KeycloakGetError, KeycloakRPTNotFound, \
+    KeycloakDeprecationError, raise_error_from_response, KeycloakInvalidTokenError
 from fastapi_keycloak_manager.core.connector.urls_patterns import (
     URL_TOKEN,
     URL_LOGOUT,

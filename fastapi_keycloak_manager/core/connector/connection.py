@@ -46,15 +46,14 @@ from pydantic import BaseModel
 from requests import Response
 from requests.adapters import HTTPAdapter
 
-from fastapi_keycloak.exceptions import (
+from fastapi_keycloak_manager.core.exceptions import (
     KeycloakError,
+    KeycloakConnectionError
 )
 
 from fastapi_keycloak_manager.core.models.model import (
     HTTPMethod,
 )
-
-from fastapi_keycloak_manager.core.exceptions import KeycloakConnectionError
 
 
 def result_or_error(

@@ -39,9 +39,9 @@ __version__ = 20221009
 import ast
 import json
 
-from .permission import Permission
-from .policy import Policy
-from .role import Role
+from fastapi_keycloak_manager.core.auth.permission import Permission
+from fastapi_keycloak_manager.core.auth.policy import Policy
+from fastapi_keycloak_manager.core.auth.role import Role
 
 
 class Authorization:

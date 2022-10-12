@@ -68,7 +68,7 @@ from fastapi_keycloak_manager.core.exceptions import (
     VerifyEmailException,
     ConfigureTOTPException,
 )
-from .connector import ConnectionManager, result_or_error, urls_patterns as urls_patterns
+from fastapi_keycloak_manager.core.connector import ConnectionManager, result_or_error, urls_patterns as urls_patterns
 from fastapi_keycloak_manager.core.models.model import KeycloakToken, OIDCUser
 
 
