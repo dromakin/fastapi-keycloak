@@ -58,7 +58,7 @@ from .exceptions import (
     KeycloakGetError,
     KeycloakRPTNotFound,
     KeycloakDeprecationError,
-    raise_error_from_response,
+    raise_error_from_response, KeycloakInvalidTokenError,
 )
 from .urls_patterns import (
     URL_TOKEN,
@@ -336,8 +336,7 @@ class KeycloakTokenManager:
     def api_token(self):
         if self.token_is_valid(token=self._api_token):
             return self._api_token
-        self.get_site_token()
-        return self._api_token
+        raise KeycloakInvalidTokenError("Token is not valid")
 
     @api_token.setter
     def api_token(self, value: str):
@@ -483,14 +482,16 @@ class KeycloakTokenManager:
         if token_type_hint == 'requesting_party_token':
             if rpt:
                 payload.update({"site_token": rpt, "token_type_hint": token_type_hint})
-                self.connection.add_param_headers("Authorization", "Bearer " + token)
+                self._connection.add_param_headers("Authorization", "Bearer " + token)
             else:
                 raise KeycloakRPTNotFound("Can't found RPT.")
 
         payload = self._add_secret_key(payload)
 
-        data_raw = self.connection.raw_post(URL_INTROSPECT.format(**params_path),
-                                            data=payload)
+        data_raw = self._connection.raw_post(
+            URL_INTROSPECT.format(**params_path),
+            data=payload
+        )
 
         return raise_error_from_response(data_raw, KeycloakGetError)
 
@@ -504,9 +505,13 @@ class KeycloakTokenManager:
         :return:
         """
         params_path = {"authorization-endpoint": self.well_know()['authorization_endpoint'],
-                       "client-id": self.client_id,
+                       "client-id": self._client_id,
                        "redirect-uri": redirect_uri}
         return URL_AUTH.format(**params_path)
+
+    # Requesting OAuth Authorization Code
+    def get_auth_code(self, redirect_uri):
+        self._connection.raw_get(self.auth_url(redirect_uri))
 
     def well_know(self):
         """ The most important endpoint to understand is the well-known configuration
@@ -517,7 +522,7 @@ class KeycloakTokenManager:
         """
 
         params_path = {"realm-name": self._realm_name}
-        data_raw = self.connection.raw_get(URL_WELL_KNOWN.format(**params_path))
+        data_raw = self._connection.raw_get(URL_WELL_KNOWN.format(**params_path))
 
         return raise_error_from_response(data_raw, KeycloakGetError)
 
