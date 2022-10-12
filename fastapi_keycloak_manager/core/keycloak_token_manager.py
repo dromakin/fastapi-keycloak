@@ -22,7 +22,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-KeycloakTokenManager.py
+keycloak_token_manager.py
   
 created by dromakin as 08.10.2022  
 Project fastapi-keycloak  
@@ -47,7 +47,7 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from jose.exceptions import JWTClaimsError
 from requests import Response
 
-from fastapi_keycloak.model import (
+from fastapi_keycloak_manager.core.models.model import (
     HTTPMethod,
     KeycloakToken,
 )
@@ -60,7 +60,7 @@ from .exceptions import (
     KeycloakDeprecationError,
     raise_error_from_response, KeycloakInvalidTokenError,
 )
-from .urls_patterns import (
+from fastapi_keycloak_manager.core.connector.urls_patterns import (
     URL_TOKEN,
     URL_LOGOUT,
     URL_CERTS,
@@ -76,30 +76,27 @@ class KeycloakTokenManager:
             server_url: str,
             callback_url: str,
             client_id: str,
-            client_secret: str,
+            client_secret_key: str,
             realm_name: str,
             timeout: int = 10,
             verify: bool = True,
             custom_headers: dict = None,
-            admin_client: bool = False,
     ):
         """FastAPIKeycloak constructor
 
         :param server_url: The URL of the Keycloak server, with `/core` suffix
         :param callback_url: Callback URL of the instance, used for core flows
         :param client_id: The id of the client used for users
-        :param client_secret: The client secret
+        :param client_secret_key: The client secret
         :param realm_name: The _realm (name)
         :param timeout: Timeout in seconds to wait for the server
         :param verify: True if want check connection SSL
         :param custom_headers: dict of custom header to pass to each HTML request
-        :param admin_client: Admin client or User
         """
-        self.admin_client = admin_client
         self._server_url = server_url
         self._realm_name = realm_name
         self._client_id = client_id
-        self._client_secret = client_secret
+        self._client_secret_key = client_secret_key
         self._callback_url = callback_url
         self._timeout = timeout
 
@@ -283,7 +280,7 @@ class KeycloakTokenManager:
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         data = {
             "client_id": self._client_id,
-            "client_secret": self._client_secret,
+            "client_secret": self._client_secret_key,
             "grant_type": "client_credentials",
         }
         response = requests.post(url=self.token_url, headers=headers, data=data, timeout=self._timeout)
@@ -322,7 +319,7 @@ class KeycloakTokenManager:
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         data = {
             "client_id": self._client_id,
-            "client_secret": self._client_secret,
+            "client_secret": self._client_secret_key,
             "code": code,
             "session_state": session_state,
             "grant_type": "authorization_code",
@@ -598,8 +595,8 @@ class KeycloakTokenManager:
         :param payload:
         :return:
         """
-        if self._client_secret:
-            payload.update({"client_secret": self._client_secret})
+        if self._client_secret_key:
+            payload.update({"client_secret": self._client_secret_key})
 
         return payload
 

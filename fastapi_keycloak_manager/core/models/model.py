@@ -33,7 +33,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, SecretStr, Field
 
-from .exceptions import KeycloakError
+from fastapi_keycloak_manager.core.exceptions import KeycloakError
 
 
 class HTTPMethod(Enum):

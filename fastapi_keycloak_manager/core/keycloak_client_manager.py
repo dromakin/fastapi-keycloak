@@ -22,7 +22,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-keycloakAdmin.py
+keycloak_client_manager.py
   
 created by dromakin as 08.10.2022  
 Project fastapi-keycloak  
@@ -40,34 +40,39 @@ __version__ = 20221008
 import functools
 import json
 from builtins import isinstance
-from typing import Any, List, Union
+from typing import Any, List, Union, Callable
 from typing import Iterable
 from urllib.parse import urlencode
 
 import requests
-from fastapi import status
+from fastapi import status, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from requests import Response
 
-from fastapi_keycloak_manager.core import urls_patterns as urls_patterns
-from .connector import ConnectionManager, result_or_error
-
-from KeycloakTokenManager import KeycloakTokenManager
-from fastapi_keycloak_manager.core.exceptions import (
-    raise_error_from_response,
-    UserNotFound,
-    KeycloakGetError,
-)
-
-from fastapi_keycloak.model import (
+from keycloak_token_manager import KeycloakTokenManager
+from fastapi_keycloak_manager.core.models.model import (
     HTTPMethod,
     KeycloakGroup,
     KeycloakIdentityProvider,
     KeycloakRole,
     KeycloakUser,
 )
+from fastapi_keycloak_manager.core.exceptions import (
+    raise_error_from_response,
+    KeycloakGetError,
+    MandatoryActionException,
+    UpdatePasswordException,
+    UpdateProfileException,
+    UpdateUserLocaleException,
+    UserNotFound,
+    VerifyEmailException,
+    ConfigureTOTPException,
+)
+from .connector import ConnectionManager, result_or_error, urls_patterns as urls_patterns
+from fastapi_keycloak_manager.core.models.model import KeycloakToken, OIDCUser
 
 
-class KeycloakAdmin:
+class KeycloakClientManager:
     PAGE_SIZE = 100
 
     def __init__(
@@ -84,7 +89,6 @@ class KeycloakAdmin:
             callback_url: str = None,
             timeout: int = 10,
             token_manager: KeycloakTokenManager = None,
-            connection_manager: ConnectionManager = None,
     ):
         """
 
@@ -110,7 +114,18 @@ class KeycloakAdmin:
         self._custom_headers = custom_headers
         self._timeout = timeout
         self._tokenManager = token_manager
-        self._connectionManager = connection_manager
+
+        headers = dict()
+        if custom_headers is not None:
+            # merge custom headers to main headers
+            headers.update(custom_headers)
+
+        self._connectionManager = ConnectionManager(
+            base_url=server_url,
+            headers=headers,
+            timeout=60,
+            verify=verify
+        )
 
         self._site_token = None
         self._api_token = None
@@ -415,6 +430,162 @@ class KeycloakAdmin:
 
         users = self.get_users(query={"search": username})
         return next((user["id"] for user in users if user["username"] == username), None)
+
+    def get_current_user(self, required_roles: List[str] = None, extra_fields: List[str] = None) -> Callable[
+        [OAuth2PasswordBearer], OIDCUser]:
+        """Returns the current user based on an access _site_token in the HTTP-header. Optionally verifies roles are possessed
+        by the user
+
+        Args:
+            required_roles List[str]: List of role names required for this endpoint
+            extra_fields List[str]: The names of the additional fields you need that are encoded in JWT
+
+        Returns:
+            Callable[OAuth2PasswordBearer, OIDCUser]: Dependency method which returns the decoded JWT content
+
+        Raises:
+            ExpiredSignatureError: If the _site_token is expired (exp > datetime.now())
+            JWTError: If decoding fails or the signature is invalid
+            JWTClaimsError: If any claim is invalid
+            HTTPException: If any role required is not contained within the roles of the users
+        """
+
+        def current_user(
+                token: OAuth2PasswordBearer = Depends(self.user_auth_scheme),
+        ) -> OIDCUser:
+            """Decodes and verifies a JWT to get the current user
+
+            Args:
+                _site_token OAuth2PasswordBearer: Access _site_token in `Authorization` HTTP-header
+
+            Returns:
+                OIDCUser: Decoded JWT content
+
+            Raises:
+                ExpiredSignatureError: If the _site_token is expired (exp > datetime.now())
+                JWTError: If decoding fails or the signature is invalid
+                JWTClaimsError: If any claim is invalid
+                HTTPException: If any role required is not contained within the roles of the users
+            """
+            decoded_token = self._tokenManager.decode_token_v1(token=token, audience="account")
+            user = OIDCUser.parse_obj(decoded_token)
+            if required_roles:
+                for role in required_roles:
+                    if role not in user.roles:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f'Role "{role}" is required to perform this action',
+                        )
+
+            if extra_fields:
+                for field in extra_fields:
+                    user.extra_fields[field] = decoded_token.get(field, None)
+
+            return user
+
+        return current_user
+
+    @result_or_error(response_model=KeycloakUser)
+    def get_user(self, user_id: str = None, query: str = "") -> KeycloakUser:
+        """Queries the keycloak API for a specific user either based on its ID or any **native** attribute
+
+        Args:
+            user_id (str): The user ID of interest
+            query: Query string. e.g. `email=testuser@codespecialist.com` or `_username=codespecialist`
+
+        Returns:
+            KeycloakUser: If the user was found
+
+        Raises:
+            KeycloakError: If the resulting response is not a successful HTTP-Code (>299)
+        """
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._api_token}",
+        }
+
+        if user_id is None:
+            response = self._connectionManager.make_request(
+                url=f"{self.users_url}?{query}",
+                method=HTTPMethod.GET,
+                headers=headers,
+            )
+            return KeycloakUser(**response.json()[0])
+        else:
+            response = self._connectionManager.make_request(
+                url=f"{self.users_url}/{user_id}",
+                method=HTTPMethod.GET,
+                headers=headers,
+            )
+            if response.status_code == status.HTTP_404_NOT_FOUND:
+                raise UserNotFound(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    reason=f"User with user_id[{user_id}] was not found"
+                )
+            return KeycloakUser(**response.json())
+
+    @result_or_error(response_model=KeycloakToken)
+    def user_login(self, username: str, password: str) -> KeycloakToken:
+        """Models the _password OAuth2 flow. Exchanges _username and _password for an access _site_token. Will raise detailed
+        errors if login fails due to requiredActions
+
+        Args:
+            username (str): Username used for login
+            password (str): Password of the user
+
+        Returns:
+            KeycloakToken: If the exchange succeeds
+
+        Raises:
+            HTTPException: If the credentials did not match any user
+            MandatoryActionException: If the login is not possible due to mandatory actions
+            KeycloakError: If the resulting response is not a successful HTTP-Code (>299, != 400, != 401)
+            UpdateUserLocaleException: If the credentials we're correct but the has requiredActions of which the first
+            one is to update his locale
+            ConfigureTOTPException: If the credentials we're correct but the has requiredActions of which the first one
+            is to configure TOTP
+            VerifyEmailException: If the credentials we're correct but the has requiredActions of which the first one
+            is to _verify his email
+            UpdatePasswordException: If the credentials we're correct but the has requiredActions of which the first one
+            is to update his _password
+            UpdateProfileException: If the credentials we're correct but the has requiredActions of which the first one
+            is to update his profile
+
+        Notes:
+            - To avoid calling this multiple times, you may want to check all requiredActions of the user if it fails
+            due to a (sub)instance of an MandatoryActionException
+        """
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "client_id": self._client_id,
+            "client_secret_key": self._client_secret,
+            "username": username,
+            "password": password,
+            "grant_type": "password",
+        }
+        response = requests.post(url=self.token_url, headers=headers, data=data, timeout=self._timeout)
+        if response.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid user credentials")
+        if response.status_code == 400:
+            user: KeycloakUser = self.get_user(query=f"username={username}")
+            if len(user.requiredActions) > 0:
+                reason = user.requiredActions[0]
+                exception = {
+                    "update_user_locale": UpdateUserLocaleException(),
+                    "CONFIGURE_TOTP": ConfigureTOTPException(),
+                    "VERIFY_EMAIL": VerifyEmailException(),
+                    "UPDATE_PASSWORD": UpdatePasswordException(),
+                    "UPDATE_PROFILE": UpdateProfileException(),
+                }.get(
+                    reason,  # Try to return the matching exception
+                    # On custom or unknown actions return a MandatoryActionException by default
+                    MandatoryActionException(
+                        detail=f"This user can't login until the following action has been "
+                               f"resolved: {reason}"
+                    ),
+                )
+                raise exception
+        return response
 
     def get_user(self, user_id):
         """
@@ -2381,7 +2552,7 @@ class KeycloakAdmin:
             "Content-Type": content_type,
             "Authorization": f"Bearer {token}",
         }
-        return requests.request(
+        return self._connectionManager.make_request(
             method=method.name, url=url, data=json.dumps(data), headers=headers, timeout=self._timeout,
         )
 
@@ -2460,3 +2631,12 @@ class KeycloakAdmin:
             timeout=self._timeout,
         )
         return response.json()
+
+    @functools.cached_property
+    def user_auth_scheme(self) -> OAuth2PasswordBearer:
+        """Returns the core scheme to register the endpoints with swagger
+
+        Returns:
+            OAuth2PasswordBearer: Auth scheme for swagger
+        """
+        return OAuth2PasswordBearer(tokenUrl=self.token_url)

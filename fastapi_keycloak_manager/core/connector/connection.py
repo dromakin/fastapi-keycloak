@@ -50,7 +50,7 @@ from fastapi_keycloak.exceptions import (
     KeycloakError,
 )
 
-from ..model import (
+from fastapi_keycloak_manager.core.models.model import (
     HTTPMethod,
 )
 
