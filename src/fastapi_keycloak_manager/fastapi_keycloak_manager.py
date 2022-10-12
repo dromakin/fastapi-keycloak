@@ -38,23 +38,16 @@ __status__ = 'Development'
 __version__ = 20221008
 
 import functools
-import json
-from json import JSONDecodeError
-from typing import Any, Callable, List, Type, Union
-from urllib.parse import urlencode
 
-import requests
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI
 from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer
-from jose import ExpiredSignatureError, JWTError, jwt
-from jose.exceptions import JWTClaimsError
-from pydantic import BaseModel
-from requests import Response
 
-from fastapi_keycloak_manager.core.connector import ConnectionManager
-from fastapi_keycloak_manager.core.connector.urls_patterns import URL_TOKEN
-from fastapi_keycloak_manager.core.keycloak_client_manager import KeycloakClientManager
-from fastapi_keycloak_manager.core.keycloak_token_manager import KeycloakTokenManager
+from core import (
+    KeycloakClientManager,
+    KeycloakTokenManager,
+    ConnectionManager,
+    URL_TOKEN
+)
 
 
 class FastAPIKeycloakManager:

@@ -45,19 +45,22 @@ from typing import Iterable
 from urllib.parse import urlencode
 
 import requests
+from requests import Response
 from fastapi import status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from requests import Response
 
 from keycloak_token_manager import KeycloakTokenManager
-from fastapi_keycloak_manager.core.models.model import (
+from models import (
     HTTPMethod,
     KeycloakGroup,
     KeycloakIdentityProvider,
     KeycloakRole,
     KeycloakUser,
+    KeycloakToken,
+    OIDCUser,
 )
-from fastapi_keycloak_manager.core.exceptions import (
+
+from exceptions import (
     raise_error_from_response,
     KeycloakGetError,
     MandatoryActionException,
@@ -68,8 +71,12 @@ from fastapi_keycloak_manager.core.exceptions import (
     VerifyEmailException,
     ConfigureTOTPException,
 )
-from fastapi_keycloak_manager.core.connector import ConnectionManager, result_or_error, urls_patterns as urls_patterns
-from fastapi_keycloak_manager.core.models.model import KeycloakToken, OIDCUser
+
+from connector import (
+    ConnectionManager,
+    result_or_error,
+    urls_patterns as urls_patterns
+)
 
 
 class KeycloakClientManager:

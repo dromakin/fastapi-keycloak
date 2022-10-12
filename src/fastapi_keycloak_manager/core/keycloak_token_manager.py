@@ -47,15 +47,26 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from jose.exceptions import JWTClaimsError
 from requests import Response
 
-from fastapi_keycloak_manager.core.models.model import (
+from models import (
     HTTPMethod,
     KeycloakToken,
 )
-from fastapi_keycloak_manager.core.connector import ConnectionManager
-from fastapi_keycloak_manager.core.connector import result_or_error
-from fastapi_keycloak_manager.core.exceptions import KeycloakError, KeycloakGetError, KeycloakRPTNotFound, \
-    KeycloakDeprecationError, raise_error_from_response, KeycloakInvalidTokenError
-from fastapi_keycloak_manager.core.connector.urls_patterns import (
+
+from connector import (
+    ConnectionManager,
+    result_or_error
+)
+
+from exceptions import (
+    KeycloakError,
+    KeycloakGetError,
+    KeycloakRPTNotFound,
+    KeycloakDeprecationError,
+    raise_error_from_response,
+    KeycloakInvalidTokenError
+)
+
+from connector import (
     URL_TOKEN,
     URL_LOGOUT,
     URL_CERTS,

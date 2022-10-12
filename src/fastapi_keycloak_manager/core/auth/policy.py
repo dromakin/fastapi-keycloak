@@ -35,7 +35,7 @@ __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221009
 
-from fastapi_keycloak_manager.core.exceptions import KeycloakAuthorizationConfigError
+from ..exceptions import KeycloakAuthorizationConfigError
 
 
 class Policy:

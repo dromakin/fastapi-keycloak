@@ -24,7 +24,7 @@
 """
 __init__.py  
   
-created by dromakin as 07.10.2022  
+created by dromakin as 09.10.2022  
 Project fastapi-keycloak  
 """
 
@@ -33,4 +33,7 @@ __maintainer__ = 'dromakin'
 __credits__ = ['dromakin', ]
 __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
-__version__ = 20221007
+__version__ = 20221009
+
+from connection import *
+from urls_patterns import *
