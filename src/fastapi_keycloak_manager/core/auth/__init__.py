@@ -39,9 +39,9 @@ __version__ = 20221009
 import ast
 import json
 
-from permission import Permission
-from policy import Policy
-from role import Role
+from .permission import Permission
+from .policy import Policy
+from .role import Role
 
 
 class Authorization:
