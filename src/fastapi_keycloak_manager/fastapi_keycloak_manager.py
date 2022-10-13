@@ -42,7 +42,7 @@ import functools
 from fastapi import FastAPI
 from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer
 
-from core import (
+from .core import (
     KeycloakClientManager,
     KeycloakTokenManager,
     ConnectionManager,

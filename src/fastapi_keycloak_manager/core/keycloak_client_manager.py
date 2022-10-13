@@ -49,7 +49,7 @@ from requests import Response
 from fastapi import status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
-from keycloak_token_manager import KeycloakTokenManager
+from .keycloak_token_manager import KeycloakTokenManager
 from .models import (
     HTTPMethod,
     KeycloakGroup,
