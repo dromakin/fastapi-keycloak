@@ -35,5 +35,5 @@ __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221009
 
-from connection import *
-from urls_patterns import *
+from .connection import *
+from .urls_patterns import *
