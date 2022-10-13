@@ -1,15 +1,15 @@
 [project]
-name = "fastapi-keycloak-manager"
-version = "0.0.0"
-description = "fastapi-keycloak-manager is a Python package that integrate FastAPI app and Keycloak IAM system."
-license = "MIT"
-keywords = ["keycloak", "openid", "oidc", "fastapi", 'Authentication', 'Authorization', 'Keycloak', 'FastAPI']
+name = "fastapi_keycloak_manager"
+version = "1.0.2"
+description = "fastapi_keycloak_manager is a Python package that integrate FastAPI app and Keycloak IAM system."
+# license = {file = "LICENSE"}
+keywords = ["keycloak", "openid", "oidc", "fastapi", "Authentication", "Authorization", "Keycloak", "FastAPI"]
 authors = [
     { name = "Dmitriy Romakin", email = "dvromakin@gmail.com" },
 ]
-maintainers = [
-    { name = "Dmitriy Romakin", email = "dvromakin@gmail.com" },
-]
+# maintainers = [
+#     { name = "Dmitriy Romakin", email = "dvromakin@gmail.com" },
+# ]
 readme = "README.md"
 classifiers = [
     "Intended Audience :: Developers",
@@ -21,14 +21,14 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: Microsoft :: Windows",
 ]
-packages = [
-    { include = "fastapi_keycloak_manager", from = "src/" },
-    { include = "fastapi_keycloak_manager/**/*.py", from = "src/" },
-]
-include = ["LICENSE"]
-
+# packages = [
+#     { include = "fastapi_keycloak_manager", from = "src/" },
+#     { include = "fastapi_keycloak_manager/**/*.py", from = "src/" },
+#     { include = "fastapi_keycloak_manager/**/**/*.py", from = "src/" },
+# ]
+# include = ["LICENSE"]
 requires-python = ">=3.8"
-dynamic = ["version", "description"]
+# dynamic = ["version", "description"]
 dependencies = [
     "anyio>=3.4.0",
     "asgiref>=3.4.1",
@@ -52,5 +52,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://fastapi-keycloak-manager.readthedocs.io/en/latest/"
-"Issue tracker" = "https://github.com/dromakin/fastapi-keycloak-manager/issues"
+"Homepage" = "https://github.com/dromakin/fastapi-keycloak"
+# documentation = "https://fastapi-keycloak-manager.readthedocs.io/en/latest/"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
