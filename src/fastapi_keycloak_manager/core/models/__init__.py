@@ -34,4 +34,4 @@ __copyright__ = "Echelon, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221012
 
-from model import *
+from .model import *

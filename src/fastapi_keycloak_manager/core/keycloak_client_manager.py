@@ -50,7 +50,7 @@ from fastapi import status, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
 from keycloak_token_manager import KeycloakTokenManager
-from models import (
+from .models import (
     HTTPMethod,
     KeycloakGroup,
     KeycloakIdentityProvider,
@@ -60,7 +60,7 @@ from models import (
     OIDCUser,
 )
 
-from exceptions import (
+from .exceptions import (
     raise_error_from_response,
     KeycloakGetError,
     MandatoryActionException,
@@ -72,7 +72,7 @@ from exceptions import (
     ConfigureTOTPException,
 )
 
-from connector import (
+from .connector import (
     ConnectionManager,
     result_or_error,
     urls_patterns as urls_patterns

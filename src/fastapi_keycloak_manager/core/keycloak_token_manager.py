@@ -47,17 +47,17 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from jose.exceptions import JWTClaimsError
 from requests import Response
 
-from models import (
+from .models import (
     HTTPMethod,
     KeycloakToken,
 )
 
-from connector import (
+from .connector import (
     ConnectionManager,
     result_or_error
 )
 
-from exceptions import (
+from .exceptions import (
     KeycloakError,
     KeycloakGetError,
     KeycloakRPTNotFound,
@@ -66,7 +66,7 @@ from exceptions import (
     KeycloakInvalidTokenError
 )
 
-from connector import (
+from .connector import (
     URL_TOKEN,
     URL_LOGOUT,
     URL_CERTS,

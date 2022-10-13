@@ -35,4 +35,4 @@ __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221007
 
-from fastapi_keycloak_manager import *
+from .fastapi_keycloak_manager import *

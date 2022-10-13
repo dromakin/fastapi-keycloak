@@ -35,5 +35,5 @@ __copyright__ = "Dromakin, Inc, 2022"
 __status__ = 'Development'
 __version__ = 20221008
 
-from exceptions import *
-from keycloak_exceptions import *
+from .exceptions import *
+from .keycloak_exceptions import *
