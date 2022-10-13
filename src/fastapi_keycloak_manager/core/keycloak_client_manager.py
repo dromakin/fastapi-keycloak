@@ -2559,9 +2559,7 @@ class KeycloakClientManager:
             "Content-Type": content_type,
             "Authorization": f"Bearer {token}",
         }
-        return self._connectionManager.make_request(
-            method=method.name, url=url, data=json.dumps(data), headers=headers, timeout=self._timeout,
-        )
+        return self._connectionManager.make_request(method=method.name, url=url, data=json.dumps(data), headers=headers)
 
     @functools.cached_property
     def login_url(self):

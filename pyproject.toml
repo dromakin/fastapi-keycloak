@@ -1,6 +1,6 @@
 [project]
 name = "fastapi_keycloak_manager"
-version = "1.0.4"
+version = "1.0.6"
 description = "fastapi_keycloak_manager is a Python package that integrate FastAPI app and Keycloak IAM system."
 # license = {file = "LICENSE"}
 keywords = ["keycloak", "openid", "oidc", "fastapi", "Authentication", "Authorization", "Keycloak", "FastAPI"]
